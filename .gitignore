@@ -1,0 +1,70 @@
+# =========================
+# Go build artifacts
+# =========================
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+
+# =========================
+# Go workspace & tooling
+# =========================
+go.work
+go.work.sum
+
+# =========================
+# Dependency vendor (if not used)
+# =========================
+vendor/
+
+# =========================
+# IDE / Editor files
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS / System files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Logs & runtime artifacts
+# =========================
+*.log
+*.pid
+
+# =========================
+# Temporary / cache files
+# =========================
+tmp/
+temp/
+.cache/
+
+
+.explainer/
+
+# =========================
+# Environment / secrets
+# =========================
+.env
+.env.*
+*.key
+*.pem
+*.crt
+
+# =========================
+# Benchmark & profiling output
+# =========================
+*.pprof
+*.trace
+cpu.out
+mem.out

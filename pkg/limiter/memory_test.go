@@ -99,7 +99,6 @@ func TestMemoryLimiter_ThreadSafety(t *testing.T) {
 			limiter.Allow(id, limit)
 		}()
 	}
-
 	wg.Wait()
 
 	dec := limiter.Allow(id, limit)

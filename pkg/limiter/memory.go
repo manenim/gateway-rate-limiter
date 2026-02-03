@@ -1,13 +1,10 @@
 package limiter
 
 import (
+	"context"
 	"sync"
 	"time"
 )
-
-type RateLimiter interface {
-	Allow(id Identity, limit Limit) Decision
-}
 
 type state struct {
 	tokens     float64
@@ -25,7 +22,7 @@ func NewMemoryLimiter() *MemoryLimiter {
 	}
 }
 
-func (m *MemoryLimiter) Allow(id Identity, limit Limit) Decision {
+func (m *MemoryLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Decision, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -42,7 +39,7 @@ func (m *MemoryLimiter) Allow(id Identity, limit Limit) Decision {
 			Remaining:  limit.Burst - 1,
 			RetryAfter: 0,
 			ResetTime:  now,
-		}
+		}, nil
 	} else {
 		elapsed := now.Sub(st.lastRefill)
 		if elapsed < 0 {
@@ -65,7 +62,7 @@ func (m *MemoryLimiter) Allow(id Identity, limit Limit) Decision {
 				Remaining:  int64(st.tokens),
 				RetryAfter: 0,
 				ResetTime:  now,
-			}
+			}, nil
 		} else {
 			costPerToken := float64(limit.Period) / float64(limit.Rate)
 			missing := 1.0 - st.tokens
@@ -75,7 +72,7 @@ func (m *MemoryLimiter) Allow(id Identity, limit Limit) Decision {
 				Remaining:  int64(st.tokens),
 				RetryAfter: time.Duration(waitParams),
 				ResetTime:  now.Add(time.Duration(waitParams)),
-			}
+			}, nil
 		}
 	}
 

@@ -1,6 +1,7 @@
 package limiter
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
@@ -9,9 +10,9 @@ func TestMemoryLimiter_Allow_Basics(t *testing.T) {
 	limiter := NewMemoryLimiter()
 
 	limit := Limit{
-		Rate: 10,
+		Rate:   10,
 		Period: time.Second,
-		Burst: 10,
+		Burst:  10,
 	}
 
 	id := Identity{Namespace: "test", Key: "user_1"}
@@ -28,13 +29,13 @@ func TestMemoryLimiter_Allow_Basics(t *testing.T) {
 
 }
 
-func TestMemoryLimiter_Exhaustion (t *testing.T) {
+func TestMemoryLimiter_Exhaustion(t *testing.T) {
 	limiter := NewMemoryLimiter()
 
 	limit := Limit{
-		Rate: 1,
+		Rate:   1,
 		Period: time.Second,
-		Burst: 5,
+		Burst:  5,
 	}
 
 	id := Identity{Namespace: "test", Key: "user_1"}
@@ -52,17 +53,16 @@ func TestMemoryLimiter_Exhaustion (t *testing.T) {
 	}
 }
 
-
 func TestMemoryLimiter_Refill(t *testing.T) {
 	limiter := NewMemoryLimiter()
 
 	limit := Limit{
-		Rate: 10,
+		Rate:   10,
 		Period: time.Second,
-		Burst: 1,
+		Burst:  1,
 	}
 
-	id := Identity{Namespace: "test", Key: "id"}
+	id := Identity{Namespace: "test", Key: "user_1"}
 
 	limiter.Allow(id, limit)
 
@@ -75,5 +75,50 @@ func TestMemoryLimiter_Refill(t *testing.T) {
 	dec := limiter.Allow(id, limit)
 	if !dec.Allow {
 		t.Errorf("Refill failed! Waited 150ms for a 100ms token but was denied.")
+	}
+}
+
+// Race Test
+func TestMemoryLimiter_ThreadSafety(t *testing.T) {
+	limiter := NewMemoryLimiter()
+
+	limit := Limit{
+		Rate:   100,
+		Burst:  100,
+		Period: time.Second,
+	}
+
+	id := Identity{Namespace: "test", Key: "user_1"}
+
+	var wg sync.WaitGroup
+
+	wg.Add(100)
+	for range 100 {
+		go func() {
+			defer wg.Done()
+			limiter.Allow(id, limit)
+		}()
+	}
+
+	wg.Wait()
+
+	dec := limiter.Allow(id, limit)
+	if dec.Allow {
+		t.Errorf("Expected bucket to be exhausted after 100 concurrent requests, but 101st was allowed")
+	}
+}
+
+func BenchmarkMemoryLimiter_Allow(b *testing.B) {
+	limiter := NewMemoryLimiter()
+
+	limit := Limit{
+		Rate:   1000,
+		Burst:  100000,
+		Period: time.Second,
+	}
+	id := Identity{Namespace: "test", Key: "user_1"}
+
+	for b.Loop() {
+		limiter.Allow(id, limit)
 	}
 }

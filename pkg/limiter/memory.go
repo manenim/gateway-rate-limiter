@@ -39,7 +39,7 @@ func (m *MemoryLimiter) Allow(id Identity, limit Limit) Decision {
 		}
 		return Decision{
 			Allow:      true,
-			Remaining:  limit.Burst,
+			Remaining:  limit.Burst - 1,
 			RetryAfter: 0,
 			ResetTime:  now,
 		}

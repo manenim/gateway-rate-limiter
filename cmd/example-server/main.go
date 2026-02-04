@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/manenim/rate-limiter/pkg/limiter"
+	"github.com/manenim/gateway-rate-limiter/pkg/limiter"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -17,11 +17,9 @@ func main() {
 		redisAddr = "localhost:6379"
 	}
 
-	// 1. Setup Redis
 	opts := &redis.Options{Addr: redisAddr}
 	client := redis.NewClient(opts)
 
-	// 2. Create Limiter
 	l, err := limiter.NewRedisLimiter(client,
 		limiter.WithPrefix("demo:"),
 		limiter.WithTimeout(100*time.Millisecond),
@@ -30,7 +28,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// 3. Define Handler
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		

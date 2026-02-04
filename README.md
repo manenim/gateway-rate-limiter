@@ -1,10 +1,11 @@
 # Distributed Rate Limiter
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/manenim/rate-limiter)](https://goreportcard.com/report/github.com/manenim/rate-limiter)
+[![Go Report Card](https://goreportcard.com/badge/github.com/manenim/gateway-rate-limiter)](https://goreportcard.com/report/github.com/manenim/gateway-rate-limiter) [![CI](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml/badge.svg)](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml)
 
 A Redis-backed, distributed **Token Bucket** rate limiter for Go.
 
 This repo ships:
+
 - A reusable library (`pkg/limiter`) with a small, testable API
 - A Redis Lua script embedded in the binary for atomic token-bucket updates
 - A runnable example server (`cmd/example-server`)
@@ -42,19 +43,19 @@ This repo ships:
 ## Installation
 
 ```bash
-go get github.com/manenim/rate-limiter
+go get github.com/manenim/gateway-rate-limiter
 ```
 
 Import the library package:
 
 ```go
-import "github.com/manenim/rate-limiter/pkg/limiter"
+import "github.com/manenim/gateway-rate-limiter/pkg/limiter"
 ```
 
 If you prefer to be explicit about versions:
 
 ```bash
-go get github.com/manenim/rate-limiter@latest
+go get github.com/manenim/gateway-rate-limiter@latest
 ```
 
 ## Quick start (Redis-backed)
@@ -101,7 +102,7 @@ if !dec.Allow {
 classDiagram
     class RateLimiter {
         <<interface>>
-        +Allow(ctx, id, limit) (Decision, error)
+        +Allow(ctx, id, limit)
     }
     class RedisLimiter
     class MemoryLimiter
@@ -208,17 +209,18 @@ The Redis-backed limiter emits:
 ### Token bucket (conceptual)
 
 `Limit` is a token-bucket policy:
+
 - Refill rate: `Rate / Period` tokens per second
 - Capacity: `Burst` tokens
 - Cost per request: `1` token
 
 ```mermaid
 flowchart LR
-    Req[Request] --> Check{Tokens >= 1?}
-    Check -- Yes --> Consume[Consume 1 token] --> Allow[Allow]
-    Check -- No --> Deny[Deny] --> Hint[RetryAfter / ResetTime hints]
+    Req["Request"] --> Check{"Tokens >= 1?"}
+    Check -- Yes --> Consume["Consume 1 token"] --> Allow["Allow"]
+    Check -- No --> Deny["Deny"] --> Hint["RetryAfter / ResetTime hints"]
 
-    Refill[Time passes] --> Add[Add tokens at rate] --> Cap[Cap at Burst]
+    Refill["Time passes"] --> Add["Add tokens at rate"] --> Cap["Cap at Burst"]
     Add --> Check
     Cap --> Check
 ```
@@ -235,15 +237,15 @@ For each `Allow()` call, the limiter runs an embedded Lua script via `EVALSHA`:
 
 ```mermaid
 flowchart TD
-    A[Allow(ctx, id, limit)] --> B[EVALSHA token_bucket.lua]
-    B --> C[HMGET tokens,last_refill]
-    C --> D[Compute refill + cap]
-    D --> E{tokens >= cost?}
-    E -- yes --> F[HMSET tokens,last_refill]
-    F --> G[EXPIRE key ttl]
-    E -- no --> H[No write]
-    G --> I[Return Decision]
-    H --> I[Return Decision]
+    A["Allow(ctx, id, limit)"] --> B["EVALSHA token_bucket.lua"]
+    B --> C["HMGET tokens,last_refill"]
+    C --> D["Compute refill + cap"]
+    D --> E{"tokens >= cost?"}
+    E -- yes --> F["HMSET tokens,last_refill"]
+    F --> G["EXPIRE key ttl"]
+    E -- no --> H["No write"]
+    G --> I["Return Decision"]
+    H --> I["Return Decision"]
 ```
 
 ### Redis data model
@@ -252,7 +254,7 @@ Each identity maps to a single Redis key holding a hash:
 
 ```mermaid
 flowchart TD
-    K["key = <prefix><namespace>:<key>"] --> H[(Redis Hash)]
+    K["key = {prefix}{namespace}:{key}"] --> H["Redis Hash"]
     H --> T["tokens (float)"]
     H --> R["last_refill (unix seconds, float)"]
     K --> X["TTL ~= ceil(2 * (Burst / refill_rate))"]
@@ -264,12 +266,12 @@ Full diagram: `docs/architecture.md`
 
 ```mermaid
 graph TD
-    Client((Client Traffic)) --> LB[Load Balancer]
+    Client["Client Traffic"] --> LB["Load Balancer"]
 
     subgraph "Application Cluster"
-        NodeA[App Instance A]
-        NodeB[App Instance B]
-        NodeC[App Instance C]
+        NodeA["App Instance A"]
+        NodeB["App Instance B"]
+        NodeC["App Instance C"]
     end
 
     LB --> NodeA
@@ -277,14 +279,14 @@ graph TD
     LB --> NodeC
 
     subgraph "Shared State"
-        Redis[(Redis Primary)]
+        Redis["Redis Primary"]
     end
 
     NodeA -- "Allow()" --> Redis
     NodeB -- "Allow()" --> Redis
     NodeC -- "Allow()" --> Redis
 
-    note[The <br/><b>Lua Script</b><br/> ensures atomic <br/>token deduction]
+    note["Lua script ensures atomic token deduction"]
     Redis --- note
 ```
 
@@ -371,5 +373,5 @@ Redis integration tests will automatically skip if Redis is not reachable at `lo
 If/when you add GitHub Actions, you can enable a build status badge like:
 
 ```md
-[![CI](https://github.com/manenim/rate-limiter/actions/workflows/ci.yml/badge.svg)](https://github.com/manenim/rate-limiter/actions/workflows/ci.yml)
+[![CI](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml/badge.svg)](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml)
 ```

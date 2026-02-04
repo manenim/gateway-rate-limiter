@@ -19,7 +19,7 @@ This repo ships:
   - [Requirements](#requirements)
   - [Installation](#installation)
   - [Quick start (Redis-backed)](#quick-start-redis-backed)
-  - [API at a glance](#api-at-a-glance)
+  - [API Reference](#api-reference)
     - [Core types](#core-types)
     - [Interface + implementations](#interface--implementations)
     - [Redis key format](#redis-key-format)
@@ -103,7 +103,7 @@ if !dec.Allow {
 
 > Note: Each `Allow()` call currently has a fixed cost of **1 token**.
 
-## API at a glance
+## API Reference
 
 ### Core types
 

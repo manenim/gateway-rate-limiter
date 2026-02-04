@@ -1,6 +1,6 @@
 # Distributed Rate Limiter
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/manenim/gateway-rate-limiter)](https://goreportcard.com/report/github.com/manenim/gateway-rate-limiter) [![CI](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml/badge.svg)](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/manenim/gateway-rate-limiter)](https://goreportcard.com/report/github.com/manenim/gateway-rate-limiter) [![CI](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml/badge.svg)](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml) [![GoDoc](https://godoc.org/github.com/manenim/gateway-rate-limiter?status.svg)](https://pkg.go.dev/github.com/manenim/gateway-rate-limiter)
 
 A Redis-backed, distributed **Token Bucket** rate limiter for Go.
 
@@ -13,19 +13,31 @@ This repo ships:
 
 ## Contents
 
-- [Features](#features)
-- [Installation](#installation)
-- [Quick start (Redis-backed)](#quick-start-redis-backed)
-- [API at a glance](#api-at-a-glance)
-- [Usage patterns](#usage-patterns)
-- [Configuration](#configuration)
-- [Observability (metrics)](#observability-metrics)
-- [How it works](#how-it-works)
-- [Architecture](#architecture)
-- [Sequence](#sequence)
-- [Example server](#example-server)
-- [Docker](#docker)
-- [Testing](#testing)
+- [Distributed Rate Limiter](#distributed-rate-limiter)
+  - [Contents](#contents)
+  - [Features](#features)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Quick start (Redis-backed)](#quick-start-redis-backed)
+  - [API at a glance](#api-at-a-glance)
+    - [Core types](#core-types)
+    - [Interface + implementations](#interface--implementations)
+    - [Redis key format](#redis-key-format)
+  - [Usage patterns](#usage-patterns)
+    - [In-memory limiter (tests / single-instance)](#in-memory-limiter-tests--single-instance)
+    - [HTTP integration (returning 429)](#http-integration-returning-429)
+    - [Fail open vs fail closed](#fail-open-vs-fail-closed)
+  - [Configuration](#configuration)
+  - [Observability (metrics)](#observability-metrics)
+  - [How it works](#how-it-works)
+    - [Token bucket (conceptual)](#token-bucket-conceptual)
+    - [Redis atomic update (implementation)](#redis-atomic-update-implementation)
+    - [Redis data model](#redis-data-model)
+  - [Architecture](#architecture)
+  - [Sequence](#sequence)
+  - [Example server](#example-server)
+  - [Docker](#docker)
+  - [Testing](#testing)
 
 ## Features
 
@@ -368,10 +380,3 @@ go test ./...
 
 Redis integration tests will automatically skip if Redis is not reachable at `localhost:6379`.
 
-## CI badge (optional)
-
-If/when you add GitHub Actions, you can enable a build status badge like:
-
-```md
-[![CI](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml/badge.svg)](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml)
-```

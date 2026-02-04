@@ -1,0 +1,13 @@
+name: Update Go Report Card
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  update-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: creekorful/goreportcard-action@v1
+        with:
+          repository: github.com/manenim/gateway-rate-limiter

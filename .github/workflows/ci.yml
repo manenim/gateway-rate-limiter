@@ -35,3 +35,4 @@ jobs:
       - name: Test (race)
         run: go test -v -race ./...
 
+      

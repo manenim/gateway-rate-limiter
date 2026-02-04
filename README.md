@@ -1,6 +1,6 @@
 # Distributed Rate Limiter
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/manenim/gateway-rate-limiter)](https://goreportcard.com/report/github.com/manenim/gateway-rate-limiter) [![CI](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml/badge.svg)](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml) [![GoDoc](https://godoc.org/github.com/manenim/gateway-rate-limiter?status.svg)](https://pkg.go.dev/github.com/manenim/gateway-rate-limiter)
+[![Go Report Card](https://goreportcard.com/badge/github.com/manenim/gateway-rate-limiter)](https://goreportcard.com/report/github.com/manenim/gateway-rate-limiter) [![CI](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml/badge.svg)](https://github.com/manenim/gateway-rate-limiter/actions/workflows/ci.yml) [![GoDoc](https://godoc.org/github.com/manenim/gateway-rate-limiter?status.svg)](https://pkg.go.dev/github.com/manenim/gateway-rate-limiter) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Redis-backed, distributed **Token Bucket** rate limiter for Go.
 

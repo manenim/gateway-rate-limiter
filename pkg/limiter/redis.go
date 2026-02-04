@@ -20,6 +20,7 @@ var tokenBucketScript string
 type RedisLimiter struct {
 	client    *redis.Client
 	scriptSHA string
+	recorder  MetricsRecorder 
 }
 
 // NewRedisLimiter validates connectivity and loads the embedded Lua script into
@@ -40,12 +41,32 @@ func NewRedisLimiter(client *redis.Client) (*RedisLimiter, error) {
 	return &RedisLimiter{
 		client:    client,
 		scriptSHA: sha,
+		recorder:  &NoOpMetricsRecorder{},
 	}, nil
+}
+
+// SetRecorder allows the caller to inject a real metrics collector (e.g., Prometheus)
+func (r *RedisLimiter) SetRecorder(rec MetricsRecorder) {
+	if rec != nil {
+		r.recorder = rec
+	}
 }
 
 // Allow checks whether a request for the given identity should be allowed under
 // the provided limit. Each call has a fixed cost of 1 token.
 func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Decision, error) {
+	// 0. Instrumentation Setup
+	start := time.Now()
+	status := "error" // Default status if we fail before decision
+	
+	// We use a closure for defer so it captures the final value of 'status'
+	defer func() {
+		r.recorder.Observe("ratelimit.latency", time.Since(start).Seconds(), map[string]string{
+			"namespace": string(id.Namespace),
+			"status":    status,
+		})
+	}()
+	
 	// 1. Prepare Inputs
 	key := "limiter:" + string(id.Namespace) + ":" + id.Key
 	now := float64(time.Now().UnixMicro()) / 1e6
@@ -61,11 +82,20 @@ func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Dec
 
 	result, err := cmd.Result()
 	if err != nil {
+		// Record the error explicitly
+		r.recorder.Add("ratelimit.errors", 1, map[string]string{
+			"namespace": string(id.Namespace),
+			"type":      "redis_eval",
+		})
 		return Decision{}, err
 	}
 
 	values, ok := result.([]interface{})
 	if !ok || len(values) != 4 {
+		r.recorder.Add("ratelimit.errors", 1, map[string]string{
+			"namespace": string(id.Namespace),
+			"type":      "invalid_format",
+		})
 		return Decision{}, errors.New("invalid lua response format")
 	}
 
@@ -74,6 +104,17 @@ func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Dec
 
 	retryAfterFloat := convertToFloat(values[2])
 	resetTimeFloat := convertToFloat(values[3])
+
+	if allowedVal == 1 {
+		status = "allowed"
+	} else {
+		status = "denied"
+	}
+	
+	r.recorder.Add("ratelimit.call", 1, map[string]string{
+		"namespace": string(id.Namespace),
+		"status":    status,
+	})
 
 	return Decision{
 		Allow:      allowedVal == 1,

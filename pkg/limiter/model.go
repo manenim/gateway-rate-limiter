@@ -36,3 +36,13 @@ type Identity struct {
 type RateLimiter interface {
 	Allow(ctx context.Context, id Identity, limit Limit) (Decision, error)
 }
+
+// MetricsRecorder defines the interface for collecting telemetry.
+// We abstract this so we aren't tied to Prometheus, Datadog, or any specific vendor.
+type MetricsRecorder interface {
+	// Add increments a counter (e.g., requests_total)
+	Add(name string, value float64, tags map[string]string)
+	
+	// Observe records a value in a histogram/distribution (e.g., latency)
+	Observe(name string, value float64, tags map[string]string)
+}

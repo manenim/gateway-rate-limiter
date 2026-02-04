@@ -41,15 +41,14 @@ func TestRedisLimiter_Metrics(t *testing.T) {
 	}
 	defer client.Close()
 
-	// 2. Create Limiter
-	limiter, err := NewRedisLimiter(client)
+	// 3. Inject Mock Recorder
+	mock := NewMockRecorder()
+
+	// 2. Create Limiter with Recorder
+	limiter, err := NewRedisLimiter(client, WithRecorder(mock))
 	if err != nil {
 		t.Fatalf("Failed to create limiter: %v", err)
 	}
-
-	// 3. Inject Mock Recorder
-	mock := NewMockRecorder()
-	limiter.SetRecorder(mock)
 
 	// 4. Perform Action
 	id := Identity{Namespace: "metrics_test", Key: "user_1"}

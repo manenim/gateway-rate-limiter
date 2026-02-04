@@ -111,4 +111,21 @@
 //   - RedisLimiter uses EVALSHA; if Redis is restarted and script cache is
 //     cleared, Allow may return a NOSCRIPT error until the script is reloaded
 //     (recreating the limiter via NewRedisLimiter will load it).
+//
+// # Configuration
+//
+// RedisLimiter is configured using the Functional Options pattern:
+//
+//	limiter, _ := NewRedisLimiter(client,
+//		WithPrefix("myapp:rate:"),
+//		WithTimeout(2*time.Second),
+//		WithRecorder(myMetrics),
+//	)
+//
+// Supported options:
+//
+//   - WithPrefix(string): Sets the key prefix (default "limiter:").
+//   - WithTimeout(time.Duration): Sets the context timeout for Redis operations
+//     (default 5s).
+//   - WithRecorder(MetricsRecorder): Injects a custom metrics backend.
 package limiter

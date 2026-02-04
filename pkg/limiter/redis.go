@@ -20,13 +20,50 @@ var tokenBucketScript string
 type RedisLimiter struct {
 	client    *redis.Client
 	scriptSHA string
-	recorder  MetricsRecorder 
+	recorder  MetricsRecorder
+	prefix    string
+	timeout   time.Duration
+}
+
+// Option configures a RedisLimiter.
+type Option func(*RedisLimiter)
+
+// WithPrefix sets the Redis key prefix. Default is "limiter:".
+func WithPrefix(prefix string) Option {
+	return func(r *RedisLimiter) {
+		r.prefix = prefix
+	}
+}
+
+// WithTimeout sets the timeout for Redis operations during initialization. Default is 5s.
+func WithTimeout(timeout time.Duration) Option {
+	return func(r *RedisLimiter) {
+		r.timeout = timeout
+	}
+}
+
+// WithRecorder sets the metrics recorder. Default is NoOpMetricsRecorder.
+func WithRecorder(recorder MetricsRecorder) Option {
+	return func(r *RedisLimiter) {
+		r.recorder = recorder
+	}
 }
 
 // NewRedisLimiter validates connectivity and loads the embedded Lua script into
 // Redis (SCRIPT LOAD). The returned limiter is ready to use.
-func NewRedisLimiter(client *redis.Client) (*RedisLimiter, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func NewRedisLimiter(client *redis.Client, opts ...Option) (*RedisLimiter, error) {
+	limiter := &RedisLimiter{
+		client:   client,
+		prefix:   "limiter:",
+		timeout:  5 * time.Second,
+		recorder: &NoOpMetricsRecorder{},
+	}
+
+	for _, opt := range opts {
+		opt(limiter)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), limiter.timeout)
 	defer cancel()
 
 	if err := client.Ping(ctx).Err(); err != nil {
@@ -38,18 +75,8 @@ func NewRedisLimiter(client *redis.Client) (*RedisLimiter, error) {
 		return nil, err
 	}
 
-	return &RedisLimiter{
-		client:    client,
-		scriptSHA: sha,
-		recorder:  &NoOpMetricsRecorder{},
-	}, nil
-}
-
-// SetRecorder allows the caller to inject a real metrics collector (e.g., Prometheus)
-func (r *RedisLimiter) SetRecorder(rec MetricsRecorder) {
-	if rec != nil {
-		r.recorder = rec
-	}
+	limiter.scriptSHA = sha
+	return limiter, nil
 }
 
 // Allow checks whether a request for the given identity should be allowed under
@@ -68,7 +95,7 @@ func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Dec
 	}()
 	
 	// 1. Prepare Inputs
-	key := "limiter:" + string(id.Namespace) + ":" + id.Key
+	key := r.prefix + string(id.Namespace) + ":" + id.Key
 	now := float64(time.Now().UnixMicro()) / 1e6
 	cost := 1.0
 	ratePerSecond := float64(limit.Rate) / limit.Period.Seconds()

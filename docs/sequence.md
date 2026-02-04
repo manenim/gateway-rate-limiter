@@ -6,7 +6,7 @@ The flow of a single `Allow()` call.
 sequenceDiagram
     participant App
     participant Limiter as RedisLimiter
-    participant Metrics as MetricsRecorder (async)
+    participant Metrics as MetricsRecorder
     participant Redis as Redis Server
     
     App->>Limiter: Allow(ctx, id, limit)

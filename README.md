@@ -6,7 +6,7 @@ A Redis-backed, distributed **Token Bucket** rate limiter for Go.
 
 This repo ships:
 
-- A reusable library (`pkg/limiter`) with a small, testable API
+- A reusable library (root `limiter` package) with a small, testable API
 - A Redis Lua script embedded in the binary for atomic token-bucket updates
 - A runnable example server (`cmd/example-server`)
 - Mermaid diagrams in `docs/`
@@ -19,7 +19,7 @@ This repo ships:
   - [Requirements](#requirements)
   - [Installation](#installation)
   - [Quick start (Redis-backed)](#quick-start-redis-backed)
-  - [API Reference](#api-reference)
+  - [Core Concepts](#core-concepts)
     - [Core types](#core-types)
     - [Interface + implementations](#interface--implementations)
     - [Redis key format](#redis-key-format)
@@ -64,7 +64,7 @@ go get github.com/manenim/gateway-rate-limiter
 Import the library package:
 
 ```go
-import "github.com/manenim/gateway-rate-limiter/pkg/limiter"
+import "github.com/manenim/gateway-rate-limiter"
 ```
 
 If you prefer to be explicit about versions:
@@ -103,7 +103,7 @@ if !dec.Allow {
 
 > Note: Each `Allow()` call currently has a fixed cost of **1 token**.
 
-## API Reference
+## Core Concepts
 
 ### Core types
 
@@ -388,7 +388,7 @@ Redis integration tests will automatically skip if Redis is not reachable at `lo
 Benchmarks were run on standard developer hardware (M1 / Dell XPS) using:
 
 ```bash
-go test -bench=. -benchmem ./pkg/limiter
+go test -bench=. -benchmem .
 ```
 
 ### MemoryLimiter results

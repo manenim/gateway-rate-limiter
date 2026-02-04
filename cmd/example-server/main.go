@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/manenim/gateway-rate-limiter/pkg/limiter"
+	"github.com/manenim/gateway-rate-limiter"
 	"github.com/redis/go-redis/v9"
 )
 

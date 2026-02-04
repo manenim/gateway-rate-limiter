@@ -8,6 +8,6 @@ jobs:
   update-report:
     runs-on: ubuntu-latest
     steps:
-      - uses: creekorful/goreportcard-action@v1
+      - uses: creekorful/goreportcard-action@v1.0
         with:
           repository: github.com/manenim/gateway-rate-limiter

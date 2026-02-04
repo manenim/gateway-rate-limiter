@@ -30,7 +30,7 @@ func main() {
 
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		
+
 		// Rate Limit: 5 req/sec (Burst 10) per IP
 		ip := r.RemoteAddr
 		id := limiter.Identity{Namespace: "ip", Key: ip}

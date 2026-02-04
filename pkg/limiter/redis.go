@@ -85,7 +85,7 @@ func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Dec
 	// 0. Instrumentation Setup
 	start := time.Now()
 	status := "error" // Default status if we fail before decision
-	
+
 	// We use a closure for defer so it captures the final value of 'status'
 	defer func() {
 		r.recorder.Observe("ratelimit.latency", time.Since(start).Seconds(), map[string]string{
@@ -93,7 +93,7 @@ func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Dec
 			"status":    status,
 		})
 	}()
-	
+
 	// 1. Prepare Inputs
 	key := r.prefix + string(id.Namespace) + ":" + id.Key
 	now := float64(time.Now().UnixMicro()) / 1e6
@@ -137,7 +137,7 @@ func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Dec
 	} else {
 		status = "denied"
 	}
-	
+
 	r.recorder.Add("ratelimit.call", 1, map[string]string{
 		"namespace": string(id.Namespace),
 		"status":    status,

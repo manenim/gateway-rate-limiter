@@ -35,7 +35,7 @@ func TestRedisLimiter_Metrics(t *testing.T) {
 	client := redis.NewClient(opts)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
-	
+
 	if err := client.Ping(ctx).Err(); err != nil {
 		t.Skipf("Skipping metrics test: Redis not available (%v)", err)
 	}
@@ -53,14 +53,14 @@ func TestRedisLimiter_Metrics(t *testing.T) {
 	// 4. Perform Action
 	id := Identity{Namespace: "metrics_test", Key: "user_1"}
 	limit := Limit{Rate: 10, Period: time.Second, Burst: 10}
-	
+
 	_, err = limiter.Allow(context.Background(), id, limit)
 	if err != nil {
 		t.Fatalf("Allow failed: %v", err)
 	}
 
 	// 5. Assertions
-	
+
 	// Check "ratelimit.call" Counter
 	if val, ok := mock.Counters["ratelimit.call"]; !ok || val != 1 {
 		t.Errorf("Expected 'ratelimit.call' counter to be 1, got %v", val)

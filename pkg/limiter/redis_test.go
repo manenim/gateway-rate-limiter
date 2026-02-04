@@ -14,7 +14,7 @@ func TestRedisLimiter_Integration(t *testing.T) {
 		Addr: "localhost:6379",
 	}
 	client := redis.NewClient(opts)
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -48,12 +48,20 @@ func TestRedisLimiter_Integration(t *testing.T) {
 		}
 
 		dec, err = limiter.Allow(ctx, id, limit)
-		if err != nil { t.Fatal(err) }
-		if !dec.Allow { t.Error("Expected second request to be Allowed") }
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !dec.Allow {
+			t.Error("Expected second request to be Allowed")
+		}
 
 		dec, err = limiter.Allow(ctx, id, limit)
-		if err != nil { t.Fatal(err) }
-		if dec.Allow { t.Error("Expected third request to be Denied") }
+		if err != nil {
+			t.Fatal(err)
+		}
+		if dec.Allow {
+			t.Error("Expected third request to be Denied")
+		}
 		if dec.RetryAfter <= 0 {
 			t.Error("Expected positive RetryAfter on denial")
 		}
@@ -64,13 +72,15 @@ func TestRedisLimiter_Integration(t *testing.T) {
 		id := Identity{Namespace: "integration", Key: key}
 		limit := Limit{Rate: 1, Period: time.Second, Burst: 1}
 
-		limiterA, _ := NewRedisLimiter(client) 
+		limiterA, _ := NewRedisLimiter(client)
 		limiterA.Allow(ctx, id, limit)
 
-		limiterB, _ := NewRedisLimiter(client) 
+		limiterB, _ := NewRedisLimiter(client)
 		dec, err := limiterB.Allow(ctx, id, limit)
-		
-		if err != nil { t.Fatal(err) }
+
+		if err != nil {
+			t.Fatal(err)
+		}
 		if dec.Allow {
 			t.Error("Instance B should see the token consumed by Instance A")
 		}

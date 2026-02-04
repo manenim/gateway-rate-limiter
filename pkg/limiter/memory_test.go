@@ -8,7 +8,7 @@ import (
 )
 
 func TestMemoryLimiter_Allow_Basics(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	limiter := NewMemoryLimiter()
 
@@ -27,13 +27,13 @@ func TestMemoryLimiter_Allow_Basics(t *testing.T) {
 	}
 
 	if decision.Remaining != 9 {
-		t.Logf("Expected 9 remianing tokens got %d instead!", decision.Remaining)
+		t.Logf("Expected 9 remaining tokens got %d instead!", decision.Remaining)
 	}
 
 }
 
 func TestMemoryLimiter_Exhaustion(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	limiter := NewMemoryLimiter()
 
@@ -59,7 +59,7 @@ func TestMemoryLimiter_Exhaustion(t *testing.T) {
 }
 
 func TestMemoryLimiter_Refill(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	limiter := NewMemoryLimiter()
 
@@ -89,7 +89,7 @@ func TestMemoryLimiter_Refill(t *testing.T) {
 
 // Race Test
 func TestMemoryLimiter_ThreadSafety(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	limiter := NewMemoryLimiter()
@@ -120,7 +120,7 @@ func TestMemoryLimiter_ThreadSafety(t *testing.T) {
 }
 
 func BenchmarkMemoryLimiter_Allow(b *testing.B) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	limiter := NewMemoryLimiter()
 

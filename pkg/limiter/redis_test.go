@@ -64,12 +64,10 @@ func TestRedisLimiter_Integration(t *testing.T) {
 		id := Identity{Namespace: "integration", Key: key}
 		limit := Limit{Rate: 1, Period: time.Second, Burst: 1}
 
-		// Instance A consumes the token
-		limiterA, _ := NewRedisLimiter(client) // Simulate Node A
+		limiterA, _ := NewRedisLimiter(client) 
 		limiterA.Allow(ctx, id, limit)
 
-		// Instance B tries to consume same token
-		limiterB, _ := NewRedisLimiter(client) // Simulate Node B
+		limiterB, _ := NewRedisLimiter(client) 
 		dec, err := limiterB.Allow(ctx, id, limit)
 		
 		if err != nil { t.Fatal(err) }

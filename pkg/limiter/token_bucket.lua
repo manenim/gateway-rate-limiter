@@ -1,4 +1,3 @@
-
 local key = KEYS[1]
 local rate = tonumber(ARGV[1])
 local capacity = tonumber(ARGV[2])
@@ -41,16 +40,14 @@ if tokens >= cost then
     redis.call('HMSET', key, 'tokens', tokens, 'last_refill', now)
     
     local ttl = math.ceil((capacity / rate) * 2)
-    redis.call('EXPIRE', key, ttl)
+	redis.call('EXPIRE', key, ttl)
 else
-    allowed = 0
-    remaining = tokens
-    
-    local needed = cost - tokens
-    retry_after = needed / rate
-    
-    local to_full = capacity - tokens
-    reset_time = now + (to_full / rate)
+	allowed = 0
+	remaining = tokens
+	
+	local needed = cost - tokens
+	retry_after = needed / rate
+	reset_time = now + retry_after
 end
 
 return {allowed, remaining, tostring(retry_after), tostring(reset_time)}

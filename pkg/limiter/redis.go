@@ -13,15 +13,21 @@ import (
 //go:embed token_bucket.lua
 var tokenBucketScript string
 
+// RedisLimiter is a distributed rate limiter backed by Redis.
+//
+// It uses a Lua script to perform the token-bucket update atomically, which
+// allows multiple application instances to enforce a single shared limit.
 type RedisLimiter struct {
 	client    *redis.Client
 	scriptSHA string
 }
 
+// NewRedisLimiter validates connectivity and loads the embedded Lua script into
+// Redis (SCRIPT LOAD). The returned limiter is ready to use.
 func NewRedisLimiter(client *redis.Client) (*RedisLimiter, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	if err := client.Ping(ctx).Err(); err != nil {
 		return nil, err
 	}
@@ -37,17 +43,20 @@ func NewRedisLimiter(client *redis.Client) (*RedisLimiter, error) {
 	}, nil
 }
 
+// Allow checks whether a request for the given identity should be allowed under
+// the provided limit. Each call has a fixed cost of 1 token.
 func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Decision, error) {
 	// 1. Prepare Inputs
 	key := "limiter:" + string(id.Namespace) + ":" + id.Key
-	now := float64(time.Now().UnixMicro()) / 1e6 
-	cost := 1.0 
+	now := float64(time.Now().UnixMicro()) / 1e6
+	cost := 1.0
+	ratePerSecond := float64(limit.Rate) / limit.Period.Seconds()
 
 	cmd := r.client.EvalSha(ctx, r.scriptSHA, []string{key},
-		limit.Rate,   // ARGV[1]
-		limit.Burst,  // ARGV[2]
-		now,          // ARGV[3]
-		cost,         // ARGV[4]
+		ratePerSecond, // ARGV[1]
+		limit.Burst,   // ARGV[2]
+		now,           // ARGV[3]
+		cost,          // ARGV[4]
 	)
 
 	result, err := cmd.Result()
@@ -59,12 +68,12 @@ func (r *RedisLimiter) Allow(ctx context.Context, id Identity, limit Limit) (Dec
 	if !ok || len(values) != 4 {
 		return Decision{}, errors.New("invalid lua response format")
 	}
-	
-	allowedVal, _ := values[0].(int64)
-	remainingVal, _ := values[1].(int64)
-    
-    retryAfterFloat := convertToFloat(values[2])
-    resetTimeFloat := convertToFloat(values[3])
+
+	allowedVal := int64(convertToFloat(values[0]))
+	remainingVal := int64(convertToFloat(values[1]))
+
+	retryAfterFloat := convertToFloat(values[2])
+	resetTimeFloat := convertToFloat(values[3])
 
 	return Decision{
 		Allow:      allowedVal == 1,

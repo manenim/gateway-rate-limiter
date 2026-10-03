@@ -5,23 +5,15 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
 func TestRedisLimiter_Options(t *testing.T) {
-	opts := &redis.Options{Addr: "localhost:6379"}
-	client := redis.NewClient(opts)
+	client := redisTestClient(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	if err := client.Ping(ctx).Err(); err != nil {
-		t.Skipf("Skipping integration test: Redis not available (%v)", err)
-	}
-	defer client.Close()
-
 	t.Run("WithPrefix", func(t *testing.T) {
-		prefix := "custom_app:"
+		prefix := redisTestPrefix(t, client)
 		key := fmt.Sprintf("opt_test_%d", time.Now().UnixNano())
 		id := Identity{Namespace: "options", Key: key}
 		limit := Limit{Rate: 1, Period: time.Second, Burst: 1}

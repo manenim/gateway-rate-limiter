@@ -1,0 +1,8 @@
+goos: linux
+goarch: amd64
+pkg: github.com/manenim/gateway-rate-limiter
+cpu: Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz
+BenchmarkMemoryLimiter_Decisions/allowed=true-4         	14779525	       190.2 ns/op	      16 B/op	       1 allocs/op
+BenchmarkMemoryLimiter_Decisions/allowed=false-4        	14229940	       302.5 ns/op	      16 B/op	       1 allocs/op
+PASS
+ok  	github.com/manenim/gateway-rate-limiter	7.128s

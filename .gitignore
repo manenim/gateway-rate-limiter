@@ -68,3 +68,6 @@ temp/
 *.trace
 cpu.out
 mem.out
+
+# Reproducible verification output (published as CI artifacts)
+evidence/

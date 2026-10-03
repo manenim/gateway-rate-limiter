@@ -5,18 +5,13 @@ import (
 	"errors"
 	"testing"
 	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
 func TestRedisLimiter_ContextCancellation(t *testing.T) {
-	opt, _ := redis.ParseURL("redis://localhost:6379")
-	client := redis.NewClient(opt)
-	defer client.Close()
-
-	limiter, err := NewRedisLimiter(client)
+	client := redisTestClient(t)
+	limiter, err := NewRedisLimiter(client, WithPrefix(redisTestPrefix(t, client)))
 	if err != nil {
-		t.Skipf("Skipping test: Redis not available (%v)", err)
+		t.Fatal(err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -41,13 +36,10 @@ func TestRedisLimiter_ContextCancellation(t *testing.T) {
 }
 
 func TestRedisLimiter_Deadline(t *testing.T) {
-	opt, _ := redis.ParseURL("redis://localhost:6379")
-	client := redis.NewClient(opt)
-	defer client.Close()
-
-	limiter, err := NewRedisLimiter(client)
+	client := redisTestClient(t)
+	limiter, err := NewRedisLimiter(client, WithPrefix(redisTestPrefix(t, client)))
 	if err != nil {
-		t.Skipf("Skipping test: Redis not available (%v)", err)
+		t.Fatal(err)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)

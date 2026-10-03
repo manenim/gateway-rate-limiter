@@ -1,0 +1,11 @@
+File: limiter.test
+Build ID: 8064e8944975da1c9f3e2be57178168e02e955ec
+Type: delay
+Time: 2026-10-03 04:10:09 WAT
+Showing nodes accounting for 4.47s, 100% of 4.47s total
+Dropped 53 nodes (cum <= 0.02s)
+      flat  flat%   sum%        cum   cum%
+     4.47s   100%   100%      4.47s   100%  sync.(*Mutex).Unlock
+         0     0%   100%      4.47s   100%  github.com/manenim/gateway-rate-limiter.(*MemoryLimiter).Allow
+         0     0%   100%      4.47s   100%  github.com/manenim/gateway-rate-limiter.BenchmarkMemoryLimiter_ParallelSharedBucket.func1
+         0     0%   100%      4.47s   100%  testing.(*B).RunParallel.func1

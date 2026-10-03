@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
 // MockRecorder captures metrics in memory for assertion
@@ -30,22 +28,13 @@ func (m *MockRecorder) Observe(name string, value float64, tags map[string]strin
 }
 
 func TestRedisLimiter_Metrics(t *testing.T) {
-	// 1. Setup Redis (Reuse integration test pattern)
-	opts := &redis.Options{Addr: "localhost:6379"}
-	client := redis.NewClient(opts)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	if err := client.Ping(ctx).Err(); err != nil {
-		t.Skipf("Skipping metrics test: Redis not available (%v)", err)
-	}
-	defer client.Close()
+	client := redisTestClient(t)
 
 	// 3. Inject Mock Recorder
 	mock := NewMockRecorder()
 
 	// 2. Create Limiter with Recorder
-	limiter, err := NewRedisLimiter(client, WithRecorder(mock))
+	limiter, err := NewRedisLimiter(client, WithRecorder(mock), WithPrefix(redisTestPrefix(t, client)))
 	if err != nil {
 		t.Fatalf("Failed to create limiter: %v", err)
 	}

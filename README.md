@@ -39,14 +39,14 @@ This repo ships:
   - [Docker](#docker)
   - [Testing](#testing)
   - [Performance](#performance)
-    - [MemoryLimiter results](#memorylimiter-results)
-    - [RedisLimiter results](#redislimiter-results)
+    - [Reproduce benchmarks and profiles](#reproduce-benchmarks-and-profiles)
+  - [Operational boundaries](#operational-boundaries)
 
 ## Features
 
 - **Redis-backed distributed state**: enforce one global limit across many app instances.
 - **Atomicity via Lua**: token refill + deduction happens server-side as a single atomic operation.
-- **Context cancellation support**: caller controls timeouts/deadlines for `Allow()`.
+- **Context support**: `Allow()` passes the caller context to go-redis; configure `ContextTimeoutEnabled` to apply deadlines to network I/O.
 - **Pluggable metrics**: bring your own Prometheus/DataDog/Otel adapter via a tiny interface.
 - **In-memory implementation**: dependency-free `MemoryLimiter` for tests and local dev.
 
@@ -76,7 +76,10 @@ go get github.com/manenim/gateway-rate-limiter@latest
 ## Quick start (Redis-backed)
 
 ```go
-client := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
+client := redis.NewClient(&redis.Options{
+    Addr: "localhost:6379",
+    ContextTimeoutEnabled: true, // apply caller deadlines to network I/O
+})
 
 l, err := limiter.NewRedisLimiter(
     client,
@@ -217,7 +220,7 @@ The Redis-backed limiter emits:
 - Counter: `ratelimit.errors` with tags `{namespace, type=redis_eval|invalid_format}`
 - Histogram/Distribution: `ratelimit.latency` (seconds) with tags `{namespace, status=allowed|denied|error}`
 
-`MetricsRecorder` methods are called inline as part of `Allow()`. Keep your implementation fast (or make it non-blocking) to avoid adding latency to admission checks.
+`MetricsRecorder` methods are called inline as part of `Allow()`. Keep your implementation fast (or make it non-blocking) to avoid adding latency to admission checks. It must also be safe for concurrent use when the limiter is shared across goroutines.
 
 ## How it works
 
@@ -343,7 +346,9 @@ The repo includes a minimal HTTP server that demonstrates how to apply the limit
 
 - Entry point: `cmd/example-server/main.go`
 - Endpoint: `GET /ping`
-- Identity: `Namespace="ip"`, `Key=r.RemoteAddr` (demo choice)
+- Identity: `Namespace="ip"`, `Key=client IP` parsed from `r.RemoteAddr` (IPv4 or IPv6; excludes the source port)
+- Error policy: fail open on Redis errors; denied requests return 429 with a whole-second `Retry-After`
+- Proxy use: the demo uses the direct peer IP; configure a trusted proxy policy before accepting forwarded headers
 - Env var: `REDIS_ADDR` (default `localhost:6379`)
 
 Run locally:
@@ -375,33 +380,70 @@ docker run --rm --network rl-demo -p 8080:8080 \
 
 ## Testing
 
-Run unit tests:
+Run tests with the race detector:
 
 ```bash
-go test ./...
+go test -v -race ./...
 ```
 
-Redis integration tests will automatically skip if Redis is not reachable at `localhost:6379`.
+Redis tests use `REDIS_ADDR` (default `localhost:6379`) and skip when Redis is
+unavailable. Set `REQUIRE_REDIS=1` to fail instead. CI requires a Redis 7 service,
+so a passing CI run cannot silently omit integration coverage.
+
+```bash
+docker run --rm -p 16379:6379 redis:7-alpine
+REDIS_ADDR=localhost:16379 REQUIRE_REDIS=1 go test -v -race -count=1 ./...
+```
+
+Use a dedicated Redis instance. Tests use unique prefixes and clean up their own
+keys; they never flush the database or the shared script cache. Coverage includes
+256 concurrent requests from eight independent Redis clients sharing one bucket,
+allowed/denied/error metric tags, closed connections, wrong Redis key types,
+missing scripts, and cancellation/deadlines. A deterministic initialization
+failure test also runs without Redis.
 
 ## Performance
 
-Benchmarks were run on standard developer hardware (M1 / Dell XPS) using:
+Performance depends on the machine, Go version, workload, connection pool, Redis
+placement, and contention. The library does not promise a fixed latency or
+throughput. Recorded local results and their scope are in
+[the benchmark evidence](docs/performance.md).
+
+### Reproduce benchmarks and profiles
+
+With Redis running, collect tests, three benchmark samples, CPU/heap profiles,
+and a mutex profile of one shared in-memory bucket:
 
 ```bash
-go test -bench=. -benchmem .
+REDIS_ADDR=localhost:16379 GOMAXPROCS=4 ./scripts/verify.sh
 ```
 
-### MemoryLimiter results
+Outputs go to `evidence/` (ignored by Git). CI uploads the same files as the
+`rate-limiter-evidence` artifact. The script records the environment, makes Redis
+mandatory, runs the race detector and ten contention repetitions, and keeps
+profiling runs separate from timing measurements. Benchmarks explicitly check
+allowed and denied paths; initialization and first-bucket setup are excluded.
 
-```text
-BenchmarkMemoryLimiter_Allow-10    15492812    76.4 ns/op    0 B/op    0 allocs/op
+For an individual benchmark:
+
+```bash
+REQUIRE_REDIS=1 go test -run '^$' -bench . -benchmem -benchtime=1s -count=3 .
+go tool pprof -http=localhost:8081 evidence/limiter.test evidence/cpu.pprof
 ```
 
-- ~76 nanoseconds per operation.
-- Zero allocations (GC friendly hot path).
+## Operational boundaries
 
-### RedisLimiter results
-
-- Dominated by network RTT (Redis round-trip).
-- Lua script execution time is < 50µs on the server side.
-- End-to-end latency is typically < 1ms depending on network proximity.
+- Lua provides atomic updates on one Redis primary. Redis persistence, failover,
+  and connection failures remain deployment concerns. Errors return a zero
+  decision and an error; the application chooses fail open or fail closed.
+- Redis script cache loss (for example, a restart) returns `NOSCRIPT`. The current
+  implementation does not reload automatically; construct a new limiter after
+  Redis recovers. Constructor timeouts apply to initialization only.
+- Refill uses the application clock. Replicas should have synchronized clocks;
+  the script clamps negative elapsed time but does not eliminate forward skew.
+- Policies should have positive `Rate`, `Period`, and `Burst`. The current API
+  assumes trusted, valid configuration. `MemoryLimiter` stores buckets for the
+  life of the process and does not honor context cancellation.
+- `RetryAfter` indicates the next available token when denied. `ResetTime` is the
+  current check time on allowance and the next-token time on denial; it is not
+  the time when the bucket becomes completely full.

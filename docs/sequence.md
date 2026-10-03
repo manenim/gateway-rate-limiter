@@ -22,7 +22,7 @@ sequenceDiagram
     end
     
     Limiter->>Metrics: Add("ratelimit.call", ...)
-    Limiter->>Metrics: Add("ratelimit.error", ...) (if applicable)
+    Limiter->>Metrics: Add("ratelimit.errors", ...) (if applicable)
     
     Limiter-->>App: Decision {Allow: true/false, ...}
     

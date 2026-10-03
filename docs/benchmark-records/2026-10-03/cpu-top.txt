@@ -1,0 +1,67 @@
+File: limiter.test
+Build ID: 8064e8944975da1c9f3e2be57178168e02e955ec
+Type: cpu
+Time: 2026-10-03 04:09:53 WAT
+Duration: 7.12s, Total samples = 6.72s (94.39%)
+Showing nodes accounting for 6.13s, 91.22% of 6.72s total
+Dropped 97 nodes (cum <= 0.03s)
+      flat  flat%   sum%        cum   cum%
+     1.40s 20.83% 20.83%      1.40s 20.83%  time.runtimeNow
+     1.11s 16.52% 37.35%      6.03s 89.73%  github.com/manenim/gateway-rate-limiter.(*MemoryLimiter).Allow
+     0.76s 11.31% 48.66%      1.97s 29.32%  runtime.concatstrings
+     0.36s  5.36% 54.02%      0.72s 10.71%  runtime.mallocgcSmallNoScanSC2
+     0.33s  4.91% 58.93%      6.36s 94.64%  github.com/manenim/gateway-rate-limiter.BenchmarkMemoryLimiter_Decisions.func1
+     0.26s  3.87% 62.80%      0.26s  3.87%  internal/runtime/maps.memHashAES
+     0.26s  3.87% 66.67%      0.26s  3.87%  internal/sync.(*Mutex).Unlock (inline)
+     0.22s  3.27% 69.94%      0.22s  3.27%  runtime.memmove
+     0.18s  2.68% 72.62%      0.57s  8.48%  internal/runtime/maps.(*Map).getWithoutKeySmallFastStr
+     0.15s  2.23% 74.85%      0.72s 10.71%  runtime.mapaccess2_faststr
+     0.14s  2.08% 76.93%      0.86s 12.80%  runtime.mallocgc
+     0.13s  1.93% 78.87%      0.16s  2.38%  time.Time.Sub
+     0.11s  1.64% 80.51%      2.08s 30.95%  runtime.concatstring3
+     0.11s  1.64% 82.14%      0.99s 14.73%  runtime.rawstringtmp
+     0.10s  1.49% 83.63%      0.10s  1.49%  memeqbody
+     0.09s  1.34% 84.97%      0.11s  1.64%  time.Time.Add
+     0.09s  1.34% 86.31%      0.09s  1.34%  time.now
+     0.08s  1.19% 87.50%      1.48s 22.02%  time.Now
+     0.06s  0.89% 88.39%      0.06s  0.89%  internal/sync.(*Mutex).Lock (inline)
+     0.05s  0.74% 89.14%      0.15s  2.23%  runtime.mallocgcSmallNoScanSlowPath
+     0.04s   0.6% 89.73%      0.04s   0.6%  runtime.futex
+     0.02s   0.3% 90.03%      0.04s   0.6%  runtime.gcmarknewobject
+     0.02s   0.3% 90.33%      0.88s 13.10%  runtime.rawstring (inline)
+     0.02s   0.3% 90.62%      0.04s   0.6%  runtime.wbBufFlush1
+     0.01s  0.15% 90.77%      0.10s  1.49%  runtime.(*mcache).nextFree
+     0.01s  0.15% 90.92%      0.05s  0.74%  runtime.(*sweepLocked).sweep
+     0.01s  0.15% 91.07%      0.11s  1.64%  runtime.bgsweep
+     0.01s  0.15% 91.22%      0.06s  0.89%  runtime.schedule
+         0     0% 91.22%      0.04s   0.6%  gcWriteBarrier
+         0     0% 91.22%      0.08s  1.19%  runtime.(*mcache).refill
+         0     0% 91.22%      0.07s  1.04%  runtime.(*mcentral).cacheSpan
+         0     0% 91.22%      0.07s  1.04%  runtime.(*mcentral).grow
+         0     0% 91.22%      0.06s  0.89%  runtime.(*mheap).alloc
+         0     0% 91.22%      0.06s  0.89%  runtime.(*mheap).alloc.func1
+         0     0% 91.22%      0.06s  0.89%  runtime.(*mheap).allocSpan
+         0     0% 91.22%      0.04s   0.6%  runtime.callers
+         0     0% 91.22%      0.04s   0.6%  runtime.callers.func1
+         0     0% 91.22%      0.04s   0.6%  runtime.findRunnable
+         0     0% 91.22%      0.04s   0.6%  runtime.gcAssistAlloc
+         0     0% 91.22%      0.04s   0.6%  runtime.gcAssistAlloc.func2
+         0     0% 91.22%      0.04s   0.6%  runtime.gcAssistAlloc1
+         0     0% 91.22%      0.05s  0.74%  runtime.gcBgMarkWorker
+         0     0% 91.22%      0.04s   0.6%  runtime.gcBgMarkWorker.func2
+         0     0% 91.22%      0.04s   0.6%  runtime.gcDrain
+         0     0% 91.22%      0.04s   0.6%  runtime.gcDrainN
+         0     0% 91.22%      0.06s  0.89%  runtime.goschedImpl
+         0     0% 91.22%      0.04s   0.6%  runtime.gosched_m
+         0     0% 91.22%      0.05s  0.74%  runtime.mProf_Malloc
+         0     0% 91.22%      0.08s  1.19%  runtime.mcall
+         0     0% 91.22%      0.05s  0.74%  runtime.profilealloc
+         0     0% 91.22%      0.06s  0.89%  runtime.scanObject
+         0     0% 91.22%      0.05s  0.74%  runtime.sweepone
+         0     0% 91.22%      0.27s  4.02%  runtime.systemstack
+         0     0% 91.22%      0.04s   0.6%  runtime.wbBufFlush
+         0     0% 91.22%      0.04s   0.6%  runtime.wbBufFlush.func1
+         0     0% 91.22%      0.06s  0.89%  sync.(*Mutex).Lock (inline)
+         0     0% 91.22%      0.26s  3.87%  sync.(*Mutex).Unlock
+         0     0% 91.22%      6.36s 94.64%  testing.(*B).run1.func1
+         0     0% 91.22%      6.36s 94.64%  testing.(*B).runN

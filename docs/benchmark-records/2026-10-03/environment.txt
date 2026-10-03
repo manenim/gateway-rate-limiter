@@ -1,0 +1,27 @@
+2026-10-03T03:08:13Z
+8f00ea968086ad6f8aed20c2f1e5297f91531fb4
+ M .github/workflows/ci.yml
+ M .gitignore
+ M cmd/example-server/main.go
+ M docs/sequence.md
+ M memory_test.go
+ M metrics_test.go
+ M options_test.go
+ M redis_test.go
+ M timeout_test.go
+?? benchmark_test.go
+?? cmd/example-server/main_test.go
+?? redis_evidence_test.go
+?? scripts/
+go version go1.27.0 linux/amd64
+linux
+amd64
+github.com/redis/go-redis/v9 v9.17.3
+Linux 7.0.0-34-generic x86_64 GNU/Linux
+Architecture:                            x86_64
+CPU(s):                                  8
+Model name:                              Intel(R) Core(TM) i7-8665U CPU @ 1.90GHz
+Thread(s) per core:                      2
+Core(s) per socket:                      4
+Socket(s):                               1
+REDIS_ADDR=127.0.0.1:16379 GOMAXPROCS=4

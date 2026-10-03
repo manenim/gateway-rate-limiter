@@ -1,0 +1,64 @@
+=== RUN   TestMemoryLimiter_Allow_Basics
+--- PASS: TestMemoryLimiter_Allow_Basics (0.00s)
+=== RUN   TestMemoryLimiter_Exhaustion
+--- PASS: TestMemoryLimiter_Exhaustion (0.00s)
+=== RUN   TestMemoryLimiter_Refill
+--- PASS: TestMemoryLimiter_Refill (0.15s)
+=== RUN   TestMemoryLimiter_ThreadSafety
+--- PASS: TestMemoryLimiter_ThreadSafety (0.00s)
+=== RUN   TestRedisLimiter_Metrics
+--- PASS: TestRedisLimiter_Metrics (0.00s)
+=== RUN   TestRedisLimiter_Options
+=== RUN   TestRedisLimiter_Options/WithPrefix
+=== RUN   TestRedisLimiter_Options/WithTimeout
+--- PASS: TestRedisLimiter_Options (0.00s)
+    --- PASS: TestRedisLimiter_Options/WithPrefix (0.00s)
+    --- PASS: TestRedisLimiter_Options/WithTimeout (0.00s)
+=== RUN   TestRedisLimiter_ConcurrentSharedBucket
+    redis_evidence_test.go:71: shared bucket: 37 allowed, 219 denied across 8 independent clients
+--- PASS: TestRedisLimiter_ConcurrentSharedBucket (0.14s)
+=== RUN   TestRedisLimiter_DependencyFailures
+=== RUN   TestRedisLimiter_DependencyFailures/closed_client
+    redis_evidence_test.go:143: closed_client returned redis: client is closed and emitted error metrics
+=== RUN   TestRedisLimiter_DependencyFailures/wrong_key_type
+    redis_evidence_test.go:143: wrong_key_type returned WRONGTYPE Operation against a key holding the wrong kind of value script: 73930b5c9bf011e30573bd32eb4c661f5b06d717, on @user_script:8. and emitted error metrics
+=== RUN   TestRedisLimiter_DependencyFailures/missing_script
+    redis_evidence_test.go:143: missing_script returned NOSCRIPT No matching script. Please use EVAL. and emitted error metrics
+--- PASS: TestRedisLimiter_DependencyFailures (0.02s)
+    --- PASS: TestRedisLimiter_DependencyFailures/closed_client (0.01s)
+    --- PASS: TestRedisLimiter_DependencyFailures/wrong_key_type (0.01s)
+    --- PASS: TestRedisLimiter_DependencyFailures/missing_script (0.01s)
+=== RUN   TestRedisLimiter_UnreachableDependency
+redis: 2026/10/03 04:09:28 pool.go:426: redis: connection pool: failed to dial after 5 attempts: test: dependency unreachable
+--- PASS: TestRedisLimiter_UnreachableDependency (0.50s)
+=== RUN   TestRedisLimiter_MetricDecisionTags
+--- PASS: TestRedisLimiter_MetricDecisionTags (0.00s)
+=== RUN   TestRedisLimiter_ServerVersion
+    redis_evidence_test.go:220: redis_version:7.0.15
+    redis_evidence_test.go:220: redis_mode:standalone
+--- PASS: TestRedisLimiter_ServerVersion (0.00s)
+=== RUN   TestRedisLimiter_Integration
+=== RUN   TestRedisLimiter_Integration/BasicFlow
+=== RUN   TestRedisLimiter_Integration/DistributedState
+--- PASS: TestRedisLimiter_Integration (0.00s)
+    --- PASS: TestRedisLimiter_Integration/BasicFlow (0.00s)
+    --- PASS: TestRedisLimiter_Integration/DistributedState (0.00s)
+=== RUN   TestRedisLimiter_ContextCancellation
+--- PASS: TestRedisLimiter_ContextCancellation (0.00s)
+=== RUN   TestRedisLimiter_Deadline
+--- PASS: TestRedisLimiter_Deadline (0.00s)
+=== RUN   ExampleMemoryLimiter
+--- PASS: ExampleMemoryLimiter (0.00s)
+PASS
+ok  	github.com/manenim/gateway-rate-limiter	1.858s
+=== RUN   TestPingHandler_ClientIPIdentity
+--- PASS: TestPingHandler_ClientIPIdentity (0.00s)
+=== RUN   TestPingHandler_DenialAndFailurePolicy
+=== RUN   TestPingHandler_DenialAndFailurePolicy/denied
+=== RUN   TestPingHandler_DenialAndFailurePolicy/dependency_failure
+2026/10/03 04:09:27 Limiter error: Redis unavailable
+--- PASS: TestPingHandler_DenialAndFailurePolicy (0.00s)
+    --- PASS: TestPingHandler_DenialAndFailurePolicy/denied (0.00s)
+    --- PASS: TestPingHandler_DenialAndFailurePolicy/dependency_failure (0.00s)
+PASS
+ok  	github.com/manenim/gateway-rate-limiter/cmd/example-server	1.031s

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -17,8 +19,9 @@ func main() {
 		redisAddr = "localhost:6379"
 	}
 
-	opts := &redis.Options{Addr: redisAddr}
+	opts := &redis.Options{Addr: redisAddr, ContextTimeoutEnabled: true}
 	client := redis.NewClient(opts)
+	defer client.Close()
 
 	l, err := limiter.NewRedisLimiter(client,
 		limiter.WithPrefix("demo:"),
@@ -28,28 +31,33 @@ func main() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-
-		// Rate Limit: 5 req/sec (Burst 10) per IP
-		ip := r.RemoteAddr
-		id := limiter.Identity{Namespace: "ip", Key: ip}
-		limit := limiter.Limit{Rate: 5, Period: time.Second, Burst: 10}
-
-		dec, err := l.Allow(ctx, id, limit)
-		if err != nil {
-			// Fail Open or Closed? Here we Fail Open (allow traffic on error)
-			log.Printf("Limiter error: %v", err)
-		} else if !dec.Allow {
-			w.Header().Set("Retry-After", fmt.Sprintf("%.2f", dec.RetryAfter.Seconds()))
-			w.WriteHeader(http.StatusTooManyRequests)
-			w.Write([]byte("Rate limit exceeded\n"))
-			return
-		}
-
-		w.Write([]byte("Pong!\n"))
-	})
+	http.Handle("/ping", pingHandler(l))
 
 	log.Printf("Server listening on :8080 (Redis: %s)", redisAddr)
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+// The demo enforces a quota per directly connected IP. Deployments behind a
+// proxy need a trusted proxy policy before using forwarded identity headers.
+func pingHandler(l limiter.RateLimiter) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			http.Error(w, "Invalid client address", http.StatusBadRequest)
+			return
+		}
+		id := limiter.Identity{Namespace: "ip", Key: ip}
+		limit := limiter.Limit{Rate: 5, Period: time.Second, Burst: 10}
+		dec, err := l.Allow(r.Context(), id, limit)
+		if err != nil {
+			// This demonstration explicitly chooses fail open on Redis errors.
+			log.Printf("Limiter error: %v", err)
+		} else if !dec.Allow {
+			w.Header().Set("Retry-After", fmt.Sprintf("%.0f", math.Ceil(dec.RetryAfter.Seconds())))
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = w.Write([]byte("Rate limit exceeded\n"))
+			return
+		}
+		_, _ = w.Write([]byte("Pong!\n"))
+	})
 }

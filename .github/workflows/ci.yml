@@ -8,6 +8,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      REDIS_ADDR: localhost:6379
+      REQUIRE_REDIS: "1"
+      GOMAXPROCS: "4"
 
     services:
       redis:
@@ -32,7 +36,13 @@ jobs:
       - name: Verify Example Compiles
         run: go build -v ./cmd/example-server
 
-      - name: Test (race)
-        run: go test -v -race ./...
+      - name: Verify and collect benchmark evidence
+        run: ./scripts/verify.sh
 
-      
+      - name: Upload verification and profiling evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rate-limiter-evidence
+          path: evidence/
+          retention-days: 14

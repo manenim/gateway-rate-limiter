@@ -27,7 +27,7 @@ func TestMemoryLimiter_Allow_Basics(t *testing.T) {
 	}
 
 	if decision.Remaining != 9 {
-		t.Logf("Expected 9 remaining tokens got %d instead!", decision.Remaining)
+		t.Errorf("Expected 9 remaining tokens got %d instead!", decision.Remaining)
 	}
 
 }
@@ -82,8 +82,8 @@ func TestMemoryLimiter_Refill(t *testing.T) {
 	time.Sleep(150 * time.Millisecond)
 
 	dec, err := limiter.Allow(ctx, id, limit)
-	if err != nil {
-		t.Errorf("Refill failed! Waited 150ms for a 100ms token but was denied.")
+	if err != nil || !dec.Allow {
+		t.Fatalf("Expected allowance after refill, got %+v, err = %v", dec, err)
 	}
 }
 
@@ -95,9 +95,9 @@ func TestMemoryLimiter_ThreadSafety(t *testing.T) {
 	limiter := NewMemoryLimiter()
 
 	limit := Limit{
-		Rate:   100,
+		Rate:   1,
 		Burst:  100,
-		Period: time.Second,
+		Period: 24 * time.Hour,
 	}
 
 	id := Identity{Namespace: "test", Key: "user_1"}
@@ -116,22 +116,5 @@ func TestMemoryLimiter_ThreadSafety(t *testing.T) {
 	dec, _ := limiter.Allow(ctx, id, limit)
 	if dec.Allow {
 		t.Errorf("Expected bucket to be exhausted after 100 concurrent requests, but 101st was allowed")
-	}
-}
-
-func BenchmarkMemoryLimiter_Allow(b *testing.B) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	limiter := NewMemoryLimiter()
-
-	limit := Limit{
-		Rate:   1000,
-		Burst:  100000,
-		Period: time.Second,
-	}
-	id := Identity{Namespace: "test", Key: "user_1"}
-
-	for b.Loop() {
-		limiter.Allow(ctx, id, limit)
 	}
 }

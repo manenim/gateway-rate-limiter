@@ -1,0 +1,11 @@
+File: limiter.test
+Build ID: 8064e8944975da1c9f3e2be57178168e02e955ec
+Type: alloc_space
+Time: 2026-10-03 04:10:00 WAT
+Showing nodes accounting for 465.51MB, 99.31% of 468.73MB total
+Dropped 25 nodes (cum <= 2.34MB)
+      flat  flat%   sum%        cum   cum%
+  465.51MB 99.31% 99.31%   465.51MB 99.31%  github.com/manenim/gateway-rate-limiter.(*MemoryLimiter).Allow
+         0     0% 99.31%   465.51MB 99.31%  github.com/manenim/gateway-rate-limiter.BenchmarkMemoryLimiter_Decisions.func1
+         0     0% 99.31%   465.51MB 99.31%  testing.(*B).run1.func1
+         0     0% 99.31%   465.51MB 99.31%  testing.(*B).runN

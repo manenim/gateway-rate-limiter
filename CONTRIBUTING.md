@@ -34,14 +34,19 @@ This library is used in high-throughput hot paths. We cannot accept PRs that bre
 - Race Detection: Run tests with the race detector enabled.
 
 ```bash
-go test -v -race ./...
+REDIS_ADDR=localhost:6379 REQUIRE_REDIS=1 go test -v -race -count=1 ./...
 ```
 
 - Allocations: If you modify the MemoryLimiter or the hot path of RedisLimiter, please run benchmarks to ensure no unnecessary allocations were added.
 
 ```bash
-go test -bench=. -benchmem ./...
+REDIS_ADDR=localhost:6379 ./scripts/verify.sh
 ```
+
+Redis is mandatory in CI. Use a dedicated local Redis instance for integration
+tests; see the README for optional local skip behavior. Benchmark evidence
+includes environment details and profiles in `evidence/`; avoid publishing a
+latency number without its workload and execution context.
 
 ### 3. Documentation
 - If you add a new public method, you must add a GoDoc comment.
